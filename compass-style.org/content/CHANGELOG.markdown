@@ -16,6 +16,28 @@ The Documentation for the [latest preview release](http://beta.compass-style.org
 
 Every release contains updated caniuse data unless otherwise noted.
 
+1.1.0 (UNRELEASED)
+------------------
+
+* Asset Collections - Each asset collection is a bundle of sass stylesheets,
+  images, and fonts that potentially have their own URL location, cache
+  busting, and host requirements. Unlike compass extensions, asset
+  collections don't require the publisher to package their assets
+  in any particular way and the image and fonts don't need to be bundled
+  or delivered as part of your projects's assets. This makes asset
+  collections ideal for integrating with drupal extensions, bower, and
+  other front-end packagers.
+  
+  To add an asset collection to your project, call `add_asset_collection`
+  and pass the asset collection configuration options to describe where
+  to find the assets and how the urls for them are constructed. [Asset
+  Collection Documentation](/help/documentation/configuration-reference/#asset-collections).
+* Sprite import globs now match all files found across the project
+  images directory, all asset collections and the sprite load paths.
+  If two images have the same basename the first one is kept and the
+  other(s) discarded according to the order above.
+* Make gradients work properly with Sass's `inspect()` function.
+
 1.0.2 (UNRELEASED)
 ------------------
 

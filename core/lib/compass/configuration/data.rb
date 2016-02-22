@@ -81,7 +81,7 @@ module Compass
       end
 
       def initialize(name, attr_hash = nil)
-        raise "I need a name!" unless name
+        raise "I need a name!" unless name && (name.is_a?(String) || name.is_a?(Symbol))
         @name = name
         set_all(attr_hash) if attr_hash
         self.top_level = self
@@ -95,6 +95,14 @@ module Compass
         end
       end
 
+      alias http_path_without_error= http_path=
+      def http_path=(path)
+        if path == :relative
+          raise ArgumentError, ":relative is no longer a valid value for http_path. Please set relative_assets = true instead."
+        end
+        self.http_path_without_error = path
+      end
+
       def add_import_path(*paths)
         paths.map!{|p| defined?(Pathname) && Pathname === p ? p.to_s : p}
         # The @added_import_paths variable works around an issue where
@@ -104,6 +112,14 @@ module Compass
         paths.each do |p|
           self.additional_import_paths << p unless additional_import_paths.include?(p)
         end
+      end
+
+
+      # Add a location where sass, image, and font assets can be found.
+      # @see AssetCollection#initialize for options
+      def add_asset_collection(options)
+        @url_resolver = nil
+        asset_collections << AssetCollection.new(options)
       end
 
       # When called with a block, defines the asset host url to be used.
@@ -192,7 +208,33 @@ module Compass
 
       def relative_assets?
         # the http_images_path is deprecated, but here for backwards compatibility.
-        relative_assets || http_images_path == :relative
+        relative_assets
+      end
+
+      def url_resolver
+        return @url_resolver if @url_resolver
+        if top_level == self
+          @url_resolver = Compass::Core::AssetUrlResolver.new(asset_collections.to_a, self)
+        else
+          top_level.url_resolver
+        end
+      end
+
+      def sprite_resolver
+        return @sprite_resolver if @sprite_resolver
+        if top_level == self
+          sprite_collections = asset_collections.to_a
+          sprite_collections += sprite_load_path.to_a.map do |slp|
+            AssetCollection.new(
+              :root_path => slp,
+              :http_path => http_images_path,
+              :images_dir => "."
+            )
+          end
+          @sprite_resolver = Compass::Core::AssetUrlResolver.new(sprite_collections, self)
+        else
+          top_level.url_resolver
+        end
       end
     end
   end
